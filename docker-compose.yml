@@ -1,0 +1,16 @@
+version: "3.4"
+
+services:
+
+  frontend-fork:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    ports:
+      - 808:80
+    volumes:
+      - "./docker_data/nginx/config.js:/usr/share/nginx/html/config/config.js"
+    # environment:
+      # - SERVER_HOST=recorder
+      # - SERVER_PORT=8083
+    restart: unless-stopped

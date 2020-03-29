@@ -7,10 +7,20 @@
     @update:center="setMapCenter"
     @update:zoom="setMapZoom"
   >
-    <LControlZoom
-      v-if="controls.zoom.display"
-      :position="controls.zoom.position"
+    <LTileLayer :url="url" :attribution="attribution" :options="{ maxNativeZoom, maxZoom }"></LTileLayer>
+    <template v-if="layersWMS">
+    <l-wms-tile-layer
+      v-for="layer in layersWMS"
+      :key="layer.name"
+      :base-url="layer.url"
+      :layers="layer.layers"
+      :visible="true"
+      :name="layer.name"
+      :transparent="true"
+      :format="'image/png'"
     />
+   </template>
+    <LControlZoom v-if="controls.zoom.display" :position="controls.zoom.position" />
     <LControlScale
       v-if="controls.scale.display"
       :position="controls.scale.position"
@@ -18,12 +28,6 @@
       :metric="controls.scale.metric"
       :imperial="controls.scale.imperial"
     />
-    <LTileLayer
-      :url="url"
-      :attribution="attribution"
-      :options="{ maxNativeZoom, maxZoom }"
-    />
-
     <template v-if="map.layers.last">
       <LCircle
         v-for="l in lastLocations"
@@ -118,6 +122,7 @@ import {
   LCircleMarker,
   LCircle,
   LPolyline,
+  LWMSTileLayer
 } from "vue2-leaflet";
 import "leaflet/dist/leaflet.css";
 import * as types from "@/store/mutation-types";
@@ -137,6 +142,7 @@ export default {
     LPolyline,
     LDeviceLocationPopup,
     LHeatmap,
+    "l-wms-tile-layer": LWMSTileLayer
   },
   data() {
     return {
@@ -153,16 +159,17 @@ export default {
         ...this.$config.map.circle,
         color: this.$config.map.circle.color || this.$config.primaryColor,
         fillColor:
-          this.$config.map.circle.fillColor || this.$config.primaryColor,
+          this.$config.map.circle.fillColor || this.$config.primaryColor
       },
       circleMarker: {
         ...this.$config.map.circleMarker,
-        color: this.$config.map.circleMarker.color || this.$config.primaryColor,
+        color: this.$config.map.circleMarker.color || this.$config.primaryColor
       },
       polyline: {
         ...this.$config.map.polyline,
-        color: this.$config.map.polyline.color || this.$config.primaryColor,
+        color: this.$config.map.polyline.color || this.$config.primaryColor
       },
+      layersWMS: this.$config.wms,
     };
   },
   mounted() {
@@ -172,12 +179,12 @@ export default {
   },
   computed: {
     ...mapGetters(["locationHistoryLatLngs", "locationHistoryLatLngGroups"]),
-    ...mapState(["lastLocations", "locationHistory", "map"]),
+    ...mapState(["lastLocations", "locationHistory", "map"])
   },
   methods: {
     ...mapMutations({
       setMapCenter: types.SET_MAP_CENTER,
-      setMapZoom: types.SET_MAP_ZOOM,
+      setMapZoom: types.SET_MAP_ZOOM
     }),
     /**
      * Fit all objects on the map into view.
@@ -195,7 +202,7 @@ export default {
       } else if (this.map.layers.last && this.lastLocations.length > 0) {
         const locations = this.lastLocations.map(l => L.latLng(l.lat, l.lon));
         this.$refs.map.mapObject.fitBounds(new L.LatLngBounds(locations), {
-          maxZoom: this.maxNativeZoom,
+          maxZoom: this.maxNativeZoom
         });
       }
     },
@@ -219,9 +226,9 @@ export default {
       return deviceLocations.map(l => ({
         ...l,
         name: lastLocation.name,
-        face: lastLocation.face,
+        face: lastLocation.face
       }));
-    },
+    }
   },
   watch: {
     lastLocations() {
@@ -229,7 +236,7 @@ export default {
     },
     locationHistory() {
       this.fitView();
-    },
-  },
+    }
+  }
 };
 </script>
